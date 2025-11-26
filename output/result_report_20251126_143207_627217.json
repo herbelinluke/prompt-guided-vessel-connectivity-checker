@@ -1,0 +1,15 @@
+{
+  "continuous": false,
+  "broken_segments": [
+    "LOCATIONS (approximate)\n\nSuperior temporal region (upper-right quadrant of the segmentation mask): several small branches show"
+  ],
+  "confidence": 0.75,
+  "quality_score": null,
+  "bifurcation_quality": "fair",
+  "anatomically_plausible": true,
+  "total_breaks": null,
+  "dimension_scores": null,
+  "prompt_type": "04_bifurcation_analysis",
+  "parsed_at": "2025-11-26T14:32:07.363003",
+  "response_file": "responses/response_report_20251126_143207_627217.txt"
+}

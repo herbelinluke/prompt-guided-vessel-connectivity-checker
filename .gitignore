@@ -30,13 +30,13 @@ env/
 htmlcov/
 
 # Output files (generated)
-output/*.png
-output/*.json
-output/*.txt
+#output/*.png
+#output/*.json
+#output/*.txt
 
 # Response files (generated)
-responses/*.txt
-response.txt
+#responses/*.txt
+#response.txt
 
 # Data (generated samples)
 data/samples/*.png
