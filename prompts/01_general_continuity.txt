@@ -1,0 +1,28 @@
+================================================================================
+PROMPT: General Continuity Check
+DESCRIPTION: Quick yes/no check for vessel continuity with overall quality score
+================================================================================
+
+INSTRUCTIONS FOR CHATGPT:
+1. Upload the composite image (shows original + mask + overlay)
+2. Copy everything below the dashed line and paste it as your message
+
+--------------------------------------------------------------------------------
+
+Analyze this vessel segmentation for connectivity.
+
+You are shown:
+1. The original retinal/vessel image
+2. The binary segmentation mask (white = vessels, black = background)
+3. An overlay showing the segmentation on the original image
+
+Please assess:
+- Does the vessel segmentation appear continuous throughout?
+- Are there any visible breaks or gaps in the vessel structures?
+- Rate the overall connectivity quality from 1-10
+
+Provide your analysis in this format:
+CONTINUITY: [continuous/discontinuous]
+BREAKS_FOUND: [yes/no]
+QUALITY_SCORE: [1-10]
+DESCRIPTION: [detailed analysis]

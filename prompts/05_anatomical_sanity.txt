@@ -1,0 +1,30 @@
+================================================================================
+PROMPT: Anatomical Sanity Check
+DESCRIPTION: Check if segmentation looks biologically realistic (no artifacts)
+================================================================================
+
+INSTRUCTIONS FOR CHATGPT:
+1. Upload the composite image (shows original + mask + overlay)
+2. Copy everything below the dashed line and paste it as your message
+
+--------------------------------------------------------------------------------
+
+Evaluate if this vessel segmentation is anatomically plausible.
+
+You are shown:
+1. The original retinal/vessel image
+2. The binary segmentation mask (white = vessels, black = background)
+3. An overlay showing the segmentation on the original image
+
+Check for:
+1. Does the vessel tree structure look natural for retinal/vascular anatomy?
+2. Are vessels properly connected in a tree-like hierarchy?
+3. Are there any floating segments not connected to the main tree?
+4. Are there unrealistic loops or crossings?
+
+Provide your assessment:
+ANATOMICALLY_PLAUSIBLE: [yes/no]
+STRUCTURE_TYPE: [tree-like/network/fragmented]
+ISOLATED_SEGMENTS: [none/few/many]
+ARTIFACTS_DETECTED: [list any obvious segmentation artifacts]
+CONFIDENCE: [0.0 to 1.0]

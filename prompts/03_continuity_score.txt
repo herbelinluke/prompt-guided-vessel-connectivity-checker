@@ -1,0 +1,27 @@
+================================================================================
+PROMPT: Continuity Score
+DESCRIPTION: Get a single 0-1 numerical score for comparing multiple segmentations
+================================================================================
+
+INSTRUCTIONS FOR CHATGPT:
+1. Upload the composite image (shows original + mask + overlay)
+2. Copy everything below the dashed line and paste it as your message
+
+--------------------------------------------------------------------------------
+
+Rate the continuity of this vessel segmentation on a scale of 0 to 1.
+
+You are shown:
+1. The original retinal/vessel image
+2. The binary segmentation mask (white = vessels, black = background)
+3. An overlay showing the segmentation on the original image
+
+Consider:
+- Are major vessels fully connected from origin to periphery?
+- Are there any unexpected breaks in vessel paths?
+- Do vessels maintain continuity through crossing points?
+
+Respond with:
+CONTINUITY_SCORE: [0.0 to 1.0]
+CONFIDENCE: [0.0 to 1.0]
+REASONING: [brief explanation]

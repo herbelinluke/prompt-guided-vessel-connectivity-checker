@@ -1,0 +1,25 @@
+# Core dependencies (required)
+numpy>=1.21.0
+Pillow>=9.0.0
+
+# Visualization
+matplotlib>=3.5.0
+
+# Optional: For adaptive thresholding in synthetic mask generation
+scipy>=1.7.0
+
+# Testing
+pytest>=7.0.0
+
+# Development
+ipykernel>=6.0.0  # For Jupyter notebooks
+
+# ============================================================
+# OPTIONAL: Only needed for API-based automation
+# ============================================================
+# These are NOT required for the manual ChatGPT workflow.
+# Uncomment if you want to use src/api_optional/vlm_interface.py
+
+# openai>=1.0.0                 # OpenAI API
+# torch>=2.0.0                  # For local LLaVA-Med
+# transformers>=4.35.0         # For local LLaVA-Med

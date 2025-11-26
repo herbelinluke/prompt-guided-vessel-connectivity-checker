@@ -1,0 +1,31 @@
+================================================================================
+PROMPT: Broken Vessel Detection
+DESCRIPTION: Find and list specific locations of all breaks with severity ratings
+================================================================================
+
+INSTRUCTIONS FOR CHATGPT:
+1. Upload the composite image (shows original + mask + overlay)
+2. Copy everything below the dashed line and paste it as your message
+
+--------------------------------------------------------------------------------
+
+Examine this vessel segmentation and identify any broken or disconnected segments.
+
+You are shown:
+1. The original retinal/vessel image
+2. The binary segmentation mask (white = vessels, black = background)
+3. An overlay showing the segmentation on the original image
+
+For each broken segment you find, describe:
+- The location (e.g., "upper-left quadrant", "near center")
+- The type of vessel (major artery, minor vessel, capillary)
+- The severity (minor gap, major disconnection)
+
+Format your response as:
+BROKEN_SEGMENTS:
+1. [location] - [vessel type] - [severity]
+2. [location] - [vessel type] - [severity]
+...
+
+TOTAL_BREAKS: [number]
+SUMMARY: [brief overall assessment]

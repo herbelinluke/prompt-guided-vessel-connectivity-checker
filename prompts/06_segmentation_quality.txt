@@ -1,0 +1,34 @@
+================================================================================
+PROMPT: Overall Segmentation Quality
+DESCRIPTION: Comprehensive evaluation with 5 separate dimension scores (1-10 each)
+================================================================================
+
+INSTRUCTIONS FOR CHATGPT:
+1. Upload the composite image (shows original + mask + overlay)
+2. Copy everything below the dashed line and paste it as your message
+
+--------------------------------------------------------------------------------
+
+Provide an overall quality assessment of this vessel segmentation.
+
+You are shown:
+1. The original retinal/vessel image
+2. The binary segmentation mask (white = vessels, black = background)
+3. An overlay showing the segmentation on the original image
+
+Evaluate:
+1. Completeness - Are all visible vessels captured?
+2. Accuracy - Does the mask align with actual vessel boundaries?
+3. Connectivity - Are vessels properly connected?
+4. Noise - Are there false positive segments?
+5. Gaps - Are there missing vessel sections?
+
+Score each from 1-10:
+COMPLETENESS: [1-10]
+ACCURACY: [1-10]
+CONNECTIVITY: [1-10]
+NOISE_LEVEL: [1-10, where 10 = no noise]
+GAP_SEVERITY: [1-10, where 10 = no gaps]
+
+OVERALL_QUALITY: [1-10]
+SUMMARY: [brief explanation]

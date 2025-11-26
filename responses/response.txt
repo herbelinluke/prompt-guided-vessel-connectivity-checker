@@ -1,0 +1,5 @@
+CONTINUITY: discontinuous
+BREAKS_FOUND: yes
+QUALITY_SCORE: 6
+
+DESCRIPTION: The vessel segmentation shows several discontinuities. There is a noticeable gap in the upper-left branch where the vessel appears to be severed. Additionally, the main artery in the center has a break in its midsection. The lower-right quadrant also shows some fragmentation where minor vessels appear disconnected from the main tree. The bifurcations generally appear intact, but these breaks compromise the overall connectivity of the vessel structure.
