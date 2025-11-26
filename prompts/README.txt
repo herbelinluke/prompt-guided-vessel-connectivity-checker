@@ -57,4 +57,8 @@ HOW TO USE THESE PROMPTS:
     Comprehensive evaluation with 5 separate dimension scores
     Use for detailed final reports
 
+[7] 07_topology_metrics.txt
+    Estimate quantitative topology metrics (components, branch points, etc.)
+    Use with compare_metrics.py to compare LLM vs computed skeleton metrics
+
 ================================================================================

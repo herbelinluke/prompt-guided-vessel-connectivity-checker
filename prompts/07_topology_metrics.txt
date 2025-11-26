@@ -1,3 +1,14 @@
+================================================================================
+PROMPT: Topology Metrics Estimation
+DESCRIPTION: Estimate quantitative topology metrics for comparison with computed values
+================================================================================
+
+INSTRUCTIONS FOR CHATGPT:
+1. Upload the composite image (shows original + mask + overlay)
+2. Copy everything below the dashed line and paste it as your message
+
+--------------------------------------------------------------------------------
+
 Analyze the vessel segmentation and estimate the following topology metrics.
 
 You are shown:
@@ -39,3 +50,4 @@ CONFIDENCE: [0.0 to 1.0]
 
 OBSERVATIONS:
 [Brief notes on what you observed about the vessel network topology]
+

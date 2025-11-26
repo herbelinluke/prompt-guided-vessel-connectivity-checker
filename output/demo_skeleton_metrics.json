@@ -1,0 +1,16 @@
+{
+  "connected_components": 19,
+  "mask_components": 19,
+  "branch_points": 583,
+  "end_points": 122,
+  "skeleton_length_px": 7773,
+  "euler_number": -37,
+  "vessel_density": 0.07473027033579828,
+  "avg_branch_length_px": 22.051063829787235,
+  "connectivity_score": 0.3368421052631579,
+  "image_size": [
+    584,
+    565
+  ],
+  "source_file": "/home/herbelinluke/Documents/rise-demos/prompt-guided-vessel-connectivity-checker/data/21_manual1.png"
+}

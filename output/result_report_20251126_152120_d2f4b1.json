@@ -1,0 +1,13 @@
+{
+  "connected_components": 3,
+  "branch_points": 50,
+  "end_points": 90,
+  "vessel_density": "medium",
+  "vessel_density_pct": 0.1,
+  "connectivity_quality": 0.85,
+  "confidence": 0.6,
+  "observations": "The segmentation shows one dominant, well-connected vascular tree originating near the optic disc, with a few tiny isolated fragments contributing to multiple connected components. Major branches are continuous, and many minor bifurcations are visible throughout the periphery. Endpoints are numerous, especially among fine peripheral vessels and small cutoff segments. Vessel coverage is moderate relative to the whole field of view, and connectivity appears largely intact with only minor breaks.",
+  "prompt_type": "07_topology_metrics",
+  "parsed_at": "2025-11-26T15:21:20.743480",
+  "response_file": "responses/response_report_20251126_152120_d2f4b1.txt"
+}

@@ -25,6 +25,88 @@ sys.path.insert(0, str(Path(__file__).parent))
 from src.utils import save_json, ensure_dir, generate_report_id
 
 
+class TopologyMetricsParser:
+    """
+    Parser specifically for topology metrics responses (prompt 07).
+    Extracts numerical estimates for comparison with computed skeleton metrics.
+    """
+    
+    def parse(self, text: str) -> dict:
+        """
+        Parse topology metrics from VLM response.
+        
+        Args:
+            text: Raw response text
+            
+        Returns:
+            Dictionary of parsed topology metrics
+        """
+        result = {
+            "connected_components": self._extract_int(text, r"CONNECTED_COMPONENTS:\s*(\d+)"),
+            "branch_points": self._extract_int(text, r"BRANCH_POINTS:\s*(\d+)"),
+            "end_points": self._extract_int(text, r"END_POINTS:\s*(\d+)"),
+            "vessel_density": self._extract_density(text),
+            "vessel_density_pct": self._extract_density_pct(text),
+            "connectivity_quality": self._extract_float(text, r"CONNECTIVITY_QUALITY:\s*([0-9.]+)"),
+            "confidence": self._extract_float(text, r"CONFIDENCE:\s*([0-9.]+)"),
+            "observations": self._extract_observations(text),
+            "prompt_type": "07_topology_metrics",
+            "raw_response": text,
+            "parsed_at": datetime.now().isoformat(),
+        }
+        
+        return result
+    
+    def _extract_int(self, text: str, pattern: str) -> int:
+        """Extract integer value using regex pattern."""
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            try:
+                return int(match.group(1))
+            except ValueError:
+                pass
+        return None
+    
+    def _extract_float(self, text: str, pattern: str) -> float:
+        """Extract float value using regex pattern."""
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            try:
+                value = float(match.group(1))
+                # Normalize to 0-1 if needed
+                if value > 1:
+                    value = value / 100
+                return min(1.0, max(0.0, value))
+            except ValueError:
+                pass
+        return None
+    
+    def _extract_density(self, text: str) -> str:
+        """Extract vessel density category (low/medium/high)."""
+        match = re.search(r"VESSEL_DENSITY:\s*(low|medium|high)", text, re.IGNORECASE)
+        if match:
+            return match.group(1).lower()
+        return None
+    
+    def _extract_density_pct(self, text: str) -> float:
+        """Extract vessel density percentage estimate."""
+        # Look for percentage in the VESSEL_DENSITY line
+        match = re.search(r"VESSEL_DENSITY:.*?(\d+(?:\.\d+)?)\s*%", text, re.IGNORECASE)
+        if match:
+            try:
+                return float(match.group(1)) / 100
+            except ValueError:
+                pass
+        return None
+    
+    def _extract_observations(self, text: str) -> str:
+        """Extract the observations section."""
+        match = re.search(r"OBSERVATIONS:\s*(.+?)(?=\n\n|\Z)", text, re.DOTALL | re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+        return None
+
+
 class SmartResponseParser:
     """
     Smarter parser that extracts information more thoroughly from ChatGPT responses.
@@ -375,15 +457,56 @@ class SmartResponseParser:
         return result
 
 
+def print_topology_result(result: dict):
+    """Print formatted topology metrics result."""
+    print("=" * 60)
+    print("  VLM TOPOLOGY METRICS ESTIMATION")
+    print("=" * 60)
+    
+    if result.get('connected_components') is not None:
+        print(f"\n  Connected Components:  {result['connected_components']}")
+    if result.get('branch_points') is not None:
+        print(f"  Branch Points:         {result['branch_points']}")
+    if result.get('end_points') is not None:
+        print(f"  End Points:            {result['end_points']}")
+    if result.get('vessel_density'):
+        density_str = result['vessel_density']
+        if result.get('vessel_density_pct'):
+            density_str += f" ({result['vessel_density_pct']:.1%})"
+        print(f"  Vessel Density:        {density_str}")
+    if result.get('connectivity_quality') is not None:
+        print(f"  Connectivity Quality:  {result['connectivity_quality']:.2f}")
+    if result.get('confidence') is not None:
+        print(f"  Confidence:            {result['confidence']:.0%}")
+    
+    if result.get('observations'):
+        print(f"\n  Observations:")
+        # Wrap long observations
+        obs = result['observations']
+        for line in obs.split('\n'):
+            if len(line) > 55:
+                print(f"    {line[:55]}")
+                print(f"    {line[55:]}")
+            else:
+                print(f"    {line}")
+    
+    print("\n" + "=" * 60)
+
+
 def print_result(result: dict):
     """Print formatted result."""
+    # Check if this is a topology metrics result
+    if result.get('prompt_type') == '07_topology_metrics':
+        print_topology_result(result)
+        return
+    
     print("=" * 60)
     print("  VESSEL CONNECTIVITY ANALYSIS RESULT")
     print("=" * 60)
     
-    status = "✓ CONTINUOUS" if result['continuous'] else "✗ DISCONTINUOUS"
+    status = "✓ CONTINUOUS" if result.get('continuous') else "✗ DISCONTINUOUS"
     print(f"\n  Status: {status}")
-    print(f"  Confidence: {result['confidence']:.0%}")
+    print(f"  Confidence: {result.get('confidence', 0):.0%}")
     
     if result['quality_score'] is not None:
         print(f"  Quality Score: {result['quality_score']:.1f}/1.0")
@@ -479,10 +602,15 @@ def main():
     # Generate a shared report ID for both files
     report_id = generate_report_id()
     
-    # Parse with the smarter parser
+    # Parse with the appropriate parser based on prompt type
     print("\n🔍 Parsing response...")
-    parser_instance = SmartResponseParser(prompt_type=prompt_type)
-    result = parser_instance.parse(response_text)
+    
+    if prompt_type == "07_topology_metrics":
+        parser_instance = TopologyMetricsParser()
+        result = parser_instance.parse(response_text)
+    else:
+        parser_instance = SmartResponseParser(prompt_type=prompt_type)
+        result = parser_instance.parse(response_text)
     
     # Print formatted result
     print_result(result)

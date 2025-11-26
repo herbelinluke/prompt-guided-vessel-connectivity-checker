@@ -67,6 +67,7 @@ vessel-connectivity-checker/
 | 4 | Bifurcation Analysis | Check branching point quality |
 | 5 | Anatomical Sanity | Verify biological realism |
 | 6 | Segmentation Quality | Comprehensive 5-dimension scores |
+| 7 | Topology Metrics | Estimate metrics for comparison with computed values |
 
 ## Output Format
 
@@ -85,13 +86,34 @@ The JSON result references the archived response:
 }
 ```
 
+## Skeleton Metrics Comparison
+
+Compare LLM topology estimates with skeletonized computed values:
+
+```bash
+# 1. Compute skeleton metrics (no VLM needed)
+python compare_metrics.py --demo
+
+# 2. Get LLM topology estimates
+python prepare_for_chatgpt.py --prompt 07
+# Upload image, paste prompt, get response, save to response.txt
+
+# 3. Parse and compare
+python parse_response.py
+python compare_metrics.py --segmentation data/21_manual1.png --response output/result_xxx.json
+```
+
+This computes skeleton-based topology metrics (branch points, connected components, etc.)
+and compares them with LLM estimates to validate how well LLMs understand a vessel topology segmentation.
+
 ## Installation
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Only needs: numpy, Pillow, matplotlib
+Core: numpy, Pillow, matplotlib
+Skeleton metrics: scikit-image (optional, only for compare_metrics.py)
 
 ## [Optional] API Automation
 
