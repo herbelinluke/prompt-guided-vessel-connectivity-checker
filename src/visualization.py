@@ -48,21 +48,21 @@ class Visualizer:
         except ImportError:
             self.has_matplotlib = False
     
-    def overlay_mask(
+    def overlay_segmentation(
         self,
         image: np.ndarray,
-        mask: np.ndarray,
+        segmentation: np.ndarray,
         alpha: float = 0.4,
         color: Tuple[int, int, int] = (220, 50, 50)
     ) -> np.ndarray:
         """
-        Overlay segmentation mask on original image.
+        Overlay vessel segmentation on original image.
         
         Args:
             image: Original image (RGB, uint8)
-            mask: Binary mask (grayscale)
+            segmentation: Binary segmentation (grayscale, vessels=white)
             alpha: Transparency of overlay (0-1)
-            color: RGB color for mask overlay
+            color: RGB color for segmentation overlay
             
         Returns:
             Composite image with overlay
@@ -76,22 +76,27 @@ class Visualizer:
         
         # Create colored overlay
         overlay = image.copy()
-        mask_binary = mask > 127
+        vessel_pixels = segmentation > 127
         
-        # Apply color to mask regions
+        # Apply color to vessel regions
         for i, c in enumerate(color):
             overlay[:, :, i] = np.where(
-                mask_binary,
+                vessel_pixels,
                 np.clip(image[:, :, i] * (1 - alpha) + c * alpha, 0, 255),
                 image[:, :, i]
             )
         
         return overlay.astype(np.uint8)
     
+    # Alias for backwards compatibility
+    def overlay_mask(self, image, mask, alpha=0.4, color=(220, 50, 50)):
+        """Deprecated: Use overlay_segmentation instead."""
+        return self.overlay_segmentation(image, mask, alpha, color)
+    
     def create_comparison(
         self,
         image: np.ndarray,
-        mask: np.ndarray,
+        segmentation: np.ndarray,
         overlay: Optional[np.ndarray] = None,
         titles: List[str] = None
     ) -> np.ndarray:
@@ -100,7 +105,7 @@ class Visualizer:
         
         Args:
             image: Original image
-            mask: Segmentation mask
+            segmentation: Vessel segmentation
             overlay: Optional pre-computed overlay
             titles: Optional titles for each panel
             
@@ -108,16 +113,16 @@ class Visualizer:
             Combined comparison image
         """
         if overlay is None:
-            overlay = self.overlay_mask(image, mask)
+            overlay = self.overlay_segmentation(image, segmentation)
         
         # Ensure all images are RGB and same size
         h, w = image.shape[:2]
         
-        # Convert mask to RGB
-        if len(mask.shape) == 2:
-            mask_rgb = np.stack([mask] * 3, axis=-1)
+        # Convert segmentation to RGB for display
+        if len(segmentation.shape) == 2:
+            segmentation_rgb = np.stack([segmentation] * 3, axis=-1)
         else:
-            mask_rgb = mask
+            segmentation_rgb = segmentation
         
         # Create combined image with spacing
         gap = 10
@@ -126,7 +131,7 @@ class Visualizer:
         
         # Place images
         combined[:, :w] = image
-        combined[:, w + gap:w * 2 + gap] = mask_rgb
+        combined[:, w + gap:w * 2 + gap] = segmentation_rgb
         combined[:, w * 2 + gap * 2:] = overlay
         
         return combined
@@ -134,7 +139,7 @@ class Visualizer:
     def create_annotated_overlay(
         self,
         image: np.ndarray,
-        mask: np.ndarray,
+        segmentation: np.ndarray,
         annotations: List[Dict[str, Any]],
         alpha: float = 0.4
     ) -> np.ndarray:
@@ -143,14 +148,14 @@ class Visualizer:
         
         Args:
             image: Original image
-            mask: Segmentation mask
+            segmentation: Vessel segmentation
             annotations: List of annotation dicts with 'text', 'position', optional 'color'
-            alpha: Mask transparency
+            alpha: Segmentation transparency
             
         Returns:
             Annotated image
         """
-        overlay = self.overlay_mask(image, mask, alpha=alpha)
+        overlay = self.overlay_segmentation(image, segmentation, alpha=alpha)
         pil_image = Image.fromarray(overlay)
         draw = ImageDraw.Draw(pil_image)
         
@@ -205,7 +210,7 @@ class Visualizer:
     def create_report_figure(
         self,
         image: np.ndarray,
-        mask: np.ndarray,
+        segmentation: np.ndarray,
         result: Dict[str, Any],
         title: str = "Vessel Connectivity Analysis"
     ) -> Optional[Any]:
@@ -214,7 +219,7 @@ class Visualizer:
         
         Args:
             image: Original image
-            mask: Segmentation mask
+            segmentation: Vessel segmentation
             result: Analysis result dictionary
             title: Figure title
             
@@ -233,13 +238,13 @@ class Visualizer:
         axes[0, 0].set_title("Original Image")
         axes[0, 0].axis('off')
         
-        # Mask
-        axes[0, 1].imshow(mask, cmap='gray')
-        axes[0, 1].set_title("Segmentation Mask")
+        # Segmentation
+        axes[0, 1].imshow(segmentation, cmap='gray')
+        axes[0, 1].set_title("Vessel Segmentation")
         axes[0, 1].axis('off')
         
         # Overlay
-        overlay = self.overlay_mask(image, mask)
+        overlay = self.overlay_segmentation(image, segmentation)
         axes[1, 0].imshow(overlay)
         axes[1, 0].set_title("Overlay")
         axes[1, 0].axis('off')
@@ -334,7 +339,7 @@ class Visualizer:
     def display_results(
         self,
         image: np.ndarray,
-        mask: np.ndarray,
+        segmentation: np.ndarray,
         result: Dict[str, Any],
         save_path: Optional[Union[str, Path]] = None
     ) -> Optional[Any]:
@@ -343,14 +348,14 @@ class Visualizer:
         
         Args:
             image: Original image
-            mask: Segmentation mask
+            segmentation: Vessel segmentation
             result: Analysis result dictionary
             save_path: Optional path to save figure
             
         Returns:
             Matplotlib figure if available
         """
-        fig = self.create_report_figure(image, mask, result)
+        fig = self.create_report_figure(image, segmentation, result)
         
         if fig is not None and save_path:
             self.save_figure(fig, save_path)
@@ -360,7 +365,7 @@ class Visualizer:
     def create_simple_overlay_image(
         self,
         image_path: Union[str, Path],
-        mask_path: Union[str, Path],
+        segmentation_path: Union[str, Path],
         output_path: Union[str, Path],
         alpha: float = 0.4
     ) -> None:
@@ -369,29 +374,29 @@ class Visualizer:
         
         Args:
             image_path: Path to original image
-            mask_path: Path to mask
+            segmentation_path: Path to segmentation
             output_path: Output path for overlay
             alpha: Transparency
         """
         image = np.array(Image.open(image_path).convert('RGB'))
-        mask = np.array(Image.open(mask_path).convert('L'))
+        segmentation = np.array(Image.open(segmentation_path).convert('L'))
         
-        overlay = self.overlay_mask(image, mask, alpha=alpha)
+        overlay = self.overlay_segmentation(image, segmentation, alpha=alpha)
         self.save_image(overlay, output_path)
 
 
 def create_overlay(
     image: Union[np.ndarray, str, Path],
-    mask: Union[np.ndarray, str, Path],
+    segmentation: Union[np.ndarray, str, Path],
     alpha: float = 0.4,
     color: Tuple[int, int, int] = (220, 50, 50)
 ) -> np.ndarray:
     """
-    Convenience function to create a mask overlay.
+    Convenience function to create a segmentation overlay.
     
     Args:
         image: Image array or path
-        mask: Mask array or path
+        segmentation: Segmentation array or path
         alpha: Transparency (0-1)
         color: Overlay color
         
@@ -400,16 +405,16 @@ def create_overlay(
     """
     if isinstance(image, (str, Path)):
         image = np.array(Image.open(image).convert('RGB'))
-    if isinstance(mask, (str, Path)):
-        mask = np.array(Image.open(mask).convert('L'))
+    if isinstance(segmentation, (str, Path)):
+        segmentation = np.array(Image.open(segmentation).convert('L'))
     
     viz = Visualizer()
-    return viz.overlay_mask(image, mask, alpha, color)
+    return viz.overlay_segmentation(image, segmentation, alpha, color)
 
 
 def save_comparison(
     image: Union[np.ndarray, str, Path],
-    mask: Union[np.ndarray, str, Path],
+    segmentation: Union[np.ndarray, str, Path],
     output_path: Union[str, Path]
 ) -> None:
     """
@@ -417,15 +422,14 @@ def save_comparison(
     
     Args:
         image: Image array or path
-        mask: Mask array or path
+        segmentation: Segmentation array or path
         output_path: Output file path
     """
     if isinstance(image, (str, Path)):
         image = np.array(Image.open(image).convert('RGB'))
-    if isinstance(mask, (str, Path)):
-        mask = np.array(Image.open(mask).convert('L'))
+    if isinstance(segmentation, (str, Path)):
+        segmentation = np.array(Image.open(segmentation).convert('L'))
     
     viz = Visualizer()
-    comparison = viz.create_comparison(image, mask)
+    comparison = viz.create_comparison(image, segmentation)
     viz.save_image(comparison, output_path)
-

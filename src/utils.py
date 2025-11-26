@@ -77,25 +77,25 @@ def generate_report_id() -> str:
 def find_image_pairs(
     directory: Union[str, Path],
     image_patterns: List[str] = None,
-    mask_patterns: List[str] = None
+    segmentation_patterns: List[str] = None
 ) -> List[Dict[str, Path]]:
     """
-    Find matching image-mask pairs in a directory.
+    Find matching image-segmentation pairs in a directory.
     
     Args:
         directory: Directory to search
         image_patterns: Patterns for image files
-        mask_patterns: Patterns for mask files
+        segmentation_patterns: Patterns for segmentation files
         
     Returns:
-        List of dicts with 'image' and 'mask' paths
+        List of dicts with 'image' and 'segmentation' paths
     """
     directory = Path(directory)
     
     if image_patterns is None:
         image_patterns = ['*_image.*', '*_original.*', '*_test.*']
-    if mask_patterns is None:
-        mask_patterns = ['*_mask.*', '*_manual.*', '*_segmentation.*', '*_1stHO.*']
+    if segmentation_patterns is None:
+        segmentation_patterns = ['*_segmentation.*', '*_seg.*', '*_manual.*', '*_1stHO.*']
     
     pairs = []
     
@@ -104,16 +104,16 @@ def find_image_pairs(
     for pattern in image_patterns:
         image_files.extend(directory.glob(pattern))
     
-    # For each image, find matching mask
+    # For each image, find matching segmentation
     for image_path in image_files:
         base_name = image_path.stem.replace('_image', '').replace('_original', '').replace('_test', '')
         
-        # Look for matching mask
-        for mask_pattern in mask_patterns:
-            for mask_path in directory.glob(mask_pattern):
-                mask_base = mask_path.stem.replace('_mask', '').replace('_manual', '').replace('_segmentation', '').replace('_1stHO', '')
-                if base_name in mask_base or mask_base in base_name:
-                    pairs.append({'image': image_path, 'mask': mask_path})
+        # Look for matching segmentation
+        for seg_pattern in segmentation_patterns:
+            for seg_path in directory.glob(seg_pattern):
+                seg_base = seg_path.stem.replace('_segmentation', '').replace('_seg', '').replace('_manual', '').replace('_1stHO', '')
+                if base_name in seg_base or seg_base in base_name:
+                    pairs.append({'image': image_path, 'segmentation': seg_path})
                     break
     
     return pairs
@@ -222,39 +222,39 @@ def setup_sample_data(data_dir: Optional[Union[str, Path]] = None) -> Dict[str, 
     Image.fromarray(image).save(image_path)
     samples['image'] = image_path
     
-    # Create corresponding mask
-    mask = np.zeros((size, size), dtype=np.uint8)
-    pil_mask = Image.fromarray(mask)
-    draw_mask = ImageDraw.Draw(pil_mask)
+    # Create corresponding segmentation
+    segmentation = np.zeros((size, size), dtype=np.uint8)
+    pil_seg = Image.fromarray(segmentation)
+    draw_seg = ImageDraw.Draw(pil_seg)
     
     # Same vessels but white on black
-    mask_color = 255
-    draw_mask.line([(50, 256), (462, 256)], fill=mask_color, width=8)
-    draw_mask.line([(150, 256), (100, 150)], fill=mask_color, width=5)
-    draw_mask.line([(150, 256), (100, 362)], fill=mask_color, width=5)
-    draw_mask.line([(300, 256), (350, 150)], fill=mask_color, width=6)
-    draw_mask.line([(300, 256), (350, 362)], fill=mask_color, width=6)
-    draw_mask.line([(350, 150), (400, 100)], fill=mask_color, width=4)
-    draw_mask.line([(350, 362), (400, 412)], fill=mask_color, width=4)
+    seg_color = 255
+    draw_seg.line([(50, 256), (462, 256)], fill=seg_color, width=8)
+    draw_seg.line([(150, 256), (100, 150)], fill=seg_color, width=5)
+    draw_seg.line([(150, 256), (100, 362)], fill=seg_color, width=5)
+    draw_seg.line([(300, 256), (350, 150)], fill=seg_color, width=6)
+    draw_seg.line([(300, 256), (350, 362)], fill=seg_color, width=6)
+    draw_seg.line([(350, 150), (400, 100)], fill=seg_color, width=4)
+    draw_seg.line([(350, 362), (400, 412)], fill=seg_color, width=4)
     
-    mask_path = data_dir / "synthetic_vessel_mask.png"
-    pil_mask.save(mask_path)
-    samples['mask'] = mask_path
+    seg_path = data_dir / "synthetic_vessel_segmentation.png"
+    pil_seg.save(seg_path)
+    samples['segmentation'] = seg_path
     
-    # Create a "broken" mask for testing discontinuity detection
-    mask_broken = np.array(pil_mask)
+    # Create a "broken" segmentation for testing discontinuity detection
+    seg_broken = np.array(pil_seg)
     # Add gaps
-    mask_broken[250:262, 200:230] = 0  # Gap in main vessel
-    mask_broken[150:180, 320:350] = 0  # Gap in branch
+    seg_broken[250:262, 200:230] = 0  # Gap in main vessel
+    seg_broken[150:180, 320:350] = 0  # Gap in branch
     
-    mask_broken_path = data_dir / "synthetic_vessel_mask_broken.png"
-    Image.fromarray(mask_broken).save(mask_broken_path)
-    samples['mask_broken'] = mask_broken_path
+    seg_broken_path = data_dir / "synthetic_vessel_segmentation_broken.png"
+    Image.fromarray(seg_broken).save(seg_broken_path)
+    samples['segmentation_broken'] = seg_broken_path
     
     print(f"Sample data created in {data_dir}")
     print(f"  Image: {samples['image']}")
-    print(f"  Mask: {samples['mask']}")
-    print(f"  Broken mask: {samples['mask_broken']}")
+    print(f"  Segmentation: {samples['segmentation']}")
+    print(f"  Broken segmentation: {samples['segmentation_broken']}")
     
     return samples
 
@@ -323,4 +323,3 @@ class Timer:
         import time
         self.elapsed = time.time() - self.start_time
         print(f"{self.name}: {self.elapsed:.2f}s")
-

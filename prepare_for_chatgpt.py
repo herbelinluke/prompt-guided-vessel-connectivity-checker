@@ -6,7 +6,7 @@ This script creates a composite image and lets you interactively select a prompt
 No API keys needed - works with the free ChatGPT web interface!
 
 Usage:
-    python prepare_for_chatgpt.py --image path/to/image.png --mask path/to/mask.png
+    python prepare_for_chatgpt.py --image path/to/image.png --segmentation path/to/seg.png
     python prepare_for_chatgpt.py --demo  # Use synthetic sample data
 """
 
@@ -149,8 +149,8 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-    # Prepare an image-mask pair for ChatGPT
-    python prepare_for_chatgpt.py --image retina.png --mask vessels.png
+    # Prepare an image-segmentation pair for ChatGPT
+    python prepare_for_chatgpt.py --image retina.png --segmentation vessels.png
     
     # Use synthetic demo data
     python prepare_for_chatgpt.py --demo
@@ -166,12 +166,16 @@ Workflow:
     )
     
     parser.add_argument('--image', '-i', type=str, help='Path to input image')
-    parser.add_argument('--mask', '-m', type=str, help='Path to segmentation mask')
+    parser.add_argument('--segmentation', '-s', type=str, help='Path to vessel segmentation')
+    parser.add_argument('--mask', '-m', type=str, help='(Deprecated) Alias for --segmentation')
     parser.add_argument('--output', '-o', type=str, default='output', help='Output directory')
     parser.add_argument('--demo', action='store_true', help='Use synthetic sample data')
     parser.add_argument('--list-prompts', action='store_true', help='List available prompts and exit')
     
     args = parser.parse_args()
+    
+    # Handle deprecated --mask argument
+    segmentation_path = args.segmentation or args.mask
     
     # Load all prompts
     prompts = get_all_prompts()
@@ -191,34 +195,34 @@ Workflow:
 ╚═══════════════════════════════════════════════════════════════╝
 """)
     
-    # Get image and mask paths
+    # Get image and segmentation paths
     if args.demo:
         print("📁 Creating synthetic sample data...")
         samples = setup_sample_data()
         image_path = samples['image']
-        mask_path = samples['mask_broken']
+        segmentation_path = samples['segmentation_broken']
         print(f"   Image: {image_path}")
-        print(f"   Mask: {mask_path}")
-    elif args.image and args.mask:
+        print(f"   Segmentation: {segmentation_path}")
+    elif args.image and segmentation_path:
         image_path = Path(args.image)
-        mask_path = Path(args.mask)
+        segmentation_path = Path(segmentation_path)
         if not image_path.exists():
             print(f"❌ Error: Image not found: {image_path}")
             sys.exit(1)
-        if not mask_path.exists():
-            print(f"❌ Error: Mask not found: {mask_path}")
+        if not segmentation_path.exists():
+            print(f"❌ Error: Segmentation not found: {segmentation_path}")
             sys.exit(1)
     else:
-        print("❌ Error: Provide --image and --mask, or use --demo")
+        print("❌ Error: Provide --image and --segmentation, or use --demo")
         parser.print_help()
         sys.exit(1)
     
     # Load images
     print("\n📷 Loading images...")
     loader = SegmentationLoader()
-    image, mask = loader.load_pair(image_path, mask_path, resize=True)
+    image, segmentation = loader.load_pair(image_path, segmentation_path, resize=True)
     print(f"   Image shape: {image.shape}")
-    print(f"   Mask shape: {mask.shape}")
+    print(f"   Segmentation shape: {segmentation.shape}")
     
     # Create visualizations
     print("\n🎨 Creating composite image...")
@@ -226,12 +230,12 @@ Workflow:
     output_dir = ensure_dir(args.output)
     
     # Create side-by-side comparison (this is what we'll upload to ChatGPT)
-    comparison = visualizer.create_comparison(image, mask)
+    comparison = visualizer.create_comparison(image, segmentation)
     comparison_path = output_dir / "chatgpt_upload.png"
     visualizer.save_image(comparison, comparison_path)
     
     # Also save individual images for reference
-    overlay = visualizer.overlay_mask(image, mask)
+    overlay = visualizer.overlay_segmentation(image, segmentation)
     visualizer.save_image(overlay, output_dir / "overlay.png")
     
     print(f"\n✅ Composite image saved to:")

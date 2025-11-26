@@ -10,7 +10,7 @@ import sys
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.segmentation_loader import SegmentationLoader, generate_synthetic_mask
+from src.segmentation_loader import SegmentationLoader, generate_synthetic_segmentation
 from src.utils import setup_sample_data
 
 
@@ -32,13 +32,13 @@ class TestSegmentationLoader:
         image_path = tmp_path / "test_image.png"
         Image.fromarray(image).save(image_path)
         
-        # Create test mask
-        mask = np.zeros((100, 100), dtype=np.uint8)
-        mask[20:80, 20:80] = 255
-        mask_path = tmp_path / "test_mask.png"
-        Image.fromarray(mask).save(mask_path)
+        # Create test segmentation
+        segmentation = np.zeros((100, 100), dtype=np.uint8)
+        segmentation[20:80, 20:80] = 255
+        seg_path = tmp_path / "test_segmentation.png"
+        Image.fromarray(segmentation).save(seg_path)
         
-        return {"image": image_path, "mask": mask_path}
+        return {"image": image_path, "segmentation": seg_path}
     
     def test_load_image(self, loader, sample_data):
         """Test image loading."""
@@ -47,24 +47,24 @@ class TestSegmentationLoader:
         assert len(image.shape) == 3
         assert image.shape[2] == 3  # RGB
     
-    def test_load_mask(self, loader, sample_data):
-        """Test mask loading."""
-        mask = loader.load_mask(sample_data["mask"])
-        assert isinstance(mask, np.ndarray)
-        assert len(mask.shape) == 2  # Grayscale
-        assert set(np.unique(mask)).issubset({0, 255})  # Binary
+    def test_load_segmentation(self, loader, sample_data):
+        """Test segmentation loading."""
+        segmentation = loader.load_segmentation(sample_data["segmentation"])
+        assert isinstance(segmentation, np.ndarray)
+        assert len(segmentation.shape) == 2  # Grayscale
+        assert set(np.unique(segmentation)).issubset({0, 255})  # Binary
     
     def test_load_pair(self, loader, sample_data):
-        """Test loading image-mask pair."""
-        image, mask = loader.load_pair(
+        """Test loading image-segmentation pair."""
+        image, segmentation = loader.load_pair(
             sample_data["image"], 
-            sample_data["mask"],
+            sample_data["segmentation"],
             resize=True
         )
         
         # Check sizes match target
         assert image.shape[:2] == (256, 256)
-        assert mask.shape[:2] == (256, 256)
+        assert segmentation.shape[:2] == (256, 256)
     
     def test_resize_image(self, loader):
         """Test image resizing."""
@@ -82,9 +82,9 @@ class TestSegmentationLoader:
     def test_create_composite(self, loader, sample_data):
         """Test composite image creation."""
         image = loader.load_image(sample_data["image"])
-        mask = loader.load_mask(sample_data["mask"])
+        segmentation = loader.load_segmentation(sample_data["segmentation"])
         
-        composite = loader.create_composite(image, mask, alpha=0.5)
+        composite = loader.create_composite(image, segmentation, alpha=0.5)
         assert composite.shape == image.shape
         assert composite.dtype == np.uint8
     
@@ -104,17 +104,17 @@ class TestSegmentationLoader:
     def test_create_side_by_side(self, loader, sample_data):
         """Test side-by-side comparison creation."""
         image = loader.load_image(sample_data["image"])
-        mask = loader.load_mask(sample_data["mask"])
+        segmentation = loader.load_segmentation(sample_data["segmentation"])
         
-        combined = loader.create_side_by_side(image, mask, gap=5)
+        combined = loader.create_side_by_side(image, segmentation, gap=5)
         
         h, w = image.shape[:2]
         expected_width = w * 2 + 5
         assert combined.shape == (h, expected_width, 3)
 
 
-class TestSyntheticMask:
-    """Test synthetic mask generation."""
+class TestSyntheticSegmentation:
+    """Test synthetic segmentation generation."""
     
     def test_otsu_method(self):
         """Test Otsu thresholding."""
@@ -122,17 +122,16 @@ class TestSyntheticMask:
         image = np.zeros((100, 100, 3), dtype=np.uint8)
         image[25:75, 25:75] = 200
         
-        mask = generate_synthetic_mask(image, method="otsu")
-        assert mask.shape == (100, 100)
-        assert set(np.unique(mask)).issubset({0, 255})
+        segmentation = generate_synthetic_segmentation(image, method="otsu")
+        assert segmentation.shape == (100, 100)
+        assert set(np.unique(segmentation)).issubset({0, 255})
     
     def test_simple_method(self):
         """Test simple thresholding."""
         image = np.full((100, 100), 100, dtype=np.uint8)
-        mask = generate_synthetic_mask(image, method="simple")
-        assert mask.shape == (100, 100)
+        segmentation = generate_synthetic_segmentation(image, method="simple")
+        assert segmentation.shape == (100, 100)
 
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
-

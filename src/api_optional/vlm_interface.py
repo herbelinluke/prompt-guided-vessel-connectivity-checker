@@ -22,7 +22,7 @@ class VLMBase(ABC):
         self, 
         image: Union[np.ndarray, str, Path],
         prompt: str,
-        mask: Optional[Union[np.ndarray, str, Path]] = None,
+        segmentation: Optional[Union[np.ndarray, str, Path]] = None,
         **kwargs
     ) -> str:
         """
@@ -31,7 +31,7 @@ class VLMBase(ABC):
         Args:
             image: Image as numpy array or path
             prompt: Text prompt for the VLM
-            mask: Optional segmentation mask
+            segmentation: Optional vessel segmentation
             **kwargs: Additional model-specific parameters
             
         Returns:
@@ -105,17 +105,17 @@ class OpenAIVLM(VLMBase):
     def _create_composite(
         self, 
         image: np.ndarray, 
-        mask: np.ndarray,
+        segmentation: np.ndarray,
         alpha: float = 0.4
     ) -> np.ndarray:
-        """Create composite image with mask overlay."""
+        """Create composite image with segmentation overlay."""
         if image.dtype == np.float32 or image.dtype == np.float64:
             image = (image * 255).astype(np.uint8)
         
-        # Create red overlay for mask
+        # Create red overlay for vessels
         overlay = image.copy()
-        mask_binary = mask > 127
-        overlay[mask_binary] = [255, 100, 100]  # Light red tint
+        vessel_pixels = segmentation > 127
+        overlay[vessel_pixels] = [255, 100, 100]  # Light red tint
         
         composite = (image * (1 - alpha) + overlay * alpha).astype(np.uint8)
         return composite
@@ -124,7 +124,7 @@ class OpenAIVLM(VLMBase):
         self, 
         image: Union[np.ndarray, str, Path],
         prompt: str,
-        mask: Optional[Union[np.ndarray, str, Path]] = None,
+        segmentation: Optional[Union[np.ndarray, str, Path]] = None,
         include_composite: bool = True,
         system_prompt: Optional[str] = None,
         **kwargs
@@ -135,7 +135,7 @@ class OpenAIVLM(VLMBase):
         Args:
             image: Original image
             prompt: Analysis prompt
-            mask: Optional segmentation mask
+            segmentation: Optional vessel segmentation
             include_composite: Whether to include composite overlay image
             system_prompt: Optional system prompt for context
             **kwargs: Additional parameters (max_tokens, temperature)
@@ -146,8 +146,8 @@ class OpenAIVLM(VLMBase):
         # Load images if paths provided
         if isinstance(image, (str, Path)):
             image = np.array(Image.open(image).convert('RGB'))
-        if mask is not None and isinstance(mask, (str, Path)):
-            mask = np.array(Image.open(mask).convert('L'))
+        if segmentation is not None and isinstance(segmentation, (str, Path)):
+            segmentation = np.array(Image.open(segmentation).convert('L'))
         
         # Build message content
         content = []
@@ -161,21 +161,21 @@ class OpenAIVLM(VLMBase):
             }
         })
         
-        # Add mask if provided
-        if mask is not None:
-            # Convert mask to RGB for visibility
-            mask_rgb = np.stack([mask] * 3, axis=-1)
+        # Add segmentation if provided
+        if segmentation is not None:
+            # Convert segmentation to RGB for visibility
+            seg_rgb = np.stack([segmentation] * 3, axis=-1)
             content.append({
                 "type": "image_url", 
                 "image_url": {
-                    "url": self._image_to_base64(mask_rgb),
+                    "url": self._image_to_base64(seg_rgb),
                     "detail": "high"
                 }
             })
             
             # Add composite overlay
             if include_composite:
-                composite = self._create_composite(image, mask)
+                composite = self._create_composite(image, segmentation)
                 content.append({
                     "type": "image_url",
                     "image_url": {
@@ -263,7 +263,7 @@ class LLaVAMedVLM(VLMBase):
         self, 
         image: Union[np.ndarray, str, Path],
         prompt: str,
-        mask: Optional[Union[np.ndarray, str, Path]] = None,
+        segmentation: Optional[Union[np.ndarray, str, Path]] = None,
         max_new_tokens: int = 512,
         **kwargs
     ) -> str:
@@ -273,7 +273,7 @@ class LLaVAMedVLM(VLMBase):
         Args:
             image: Input image
             prompt: Analysis prompt
-            mask: Optional segmentation mask (will be composited)
+            segmentation: Optional vessel segmentation (will be composited)
             max_new_tokens: Maximum tokens to generate
             
         Returns:
@@ -289,12 +289,12 @@ class LLaVAMedVLM(VLMBase):
                 image = (image * 255).astype(np.uint8)
             pil_image = Image.fromarray(image)
         
-        # If mask provided, create composite
-        if mask is not None:
-            if isinstance(mask, (str, Path)):
-                mask = np.array(Image.open(mask).convert('L'))
+        # If segmentation provided, create composite
+        if segmentation is not None:
+            if isinstance(segmentation, (str, Path)):
+                segmentation = np.array(Image.open(segmentation).convert('L'))
             image_array = np.array(pil_image)
-            composite = self._create_composite(image_array, mask)
+            composite = self._create_composite(image_array, segmentation)
             pil_image = Image.fromarray(composite)
         
         # Format prompt for LLaVA
@@ -336,13 +336,13 @@ class LLaVAMedVLM(VLMBase):
     def _create_composite(
         self, 
         image: np.ndarray, 
-        mask: np.ndarray,
+        segmentation: np.ndarray,
         alpha: float = 0.4
     ) -> np.ndarray:
-        """Create composite image with mask overlay."""
+        """Create composite image with segmentation overlay."""
         overlay = image.copy()
-        mask_binary = mask > 127
-        overlay[mask_binary] = [255, 100, 100]
+        vessel_pixels = segmentation > 127
+        overlay[vessel_pixels] = [255, 100, 100]
         composite = (image * (1 - alpha) + overlay * alpha).astype(np.uint8)
         return composite
 
@@ -377,7 +377,7 @@ class VLMInterface:
         self,
         image: Union[np.ndarray, str, Path],
         prompt: str,
-        mask: Optional[Union[np.ndarray, str, Path]] = None,
+        segmentation: Optional[Union[np.ndarray, str, Path]] = None,
         **kwargs
     ) -> str:
         """
@@ -386,18 +386,18 @@ class VLMInterface:
         Args:
             image: Input image
             prompt: Analysis prompt
-            mask: Optional segmentation mask
+            segmentation: Optional vessel segmentation
             **kwargs: Additional parameters
             
         Returns:
             VLM response text
         """
-        return self.vlm.ask(image, prompt, mask, **kwargs)
+        return self.vlm.ask(image, prompt, segmentation, **kwargs)
     
     def ask_vlm(
         self,
         image: Union[np.ndarray, str, Path],
-        mask: Optional[Union[np.ndarray, str, Path]],
+        segmentation: Optional[Union[np.ndarray, str, Path]],
         prompt: str,
         **kwargs
     ) -> str:
@@ -407,11 +407,10 @@ class VLMInterface:
         
         Args:
             image: Input image
-            mask: Segmentation mask (can be None)
+            segmentation: Vessel segmentation (can be None)
             prompt: Analysis prompt
             
         Returns:
             VLM response text
         """
-        return self.ask(image, prompt, mask, **kwargs)
-
+        return self.ask(image, prompt, segmentation, **kwargs)

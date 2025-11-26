@@ -27,44 +27,44 @@ class TestVisualizer:
         return np.random.randint(0, 255, (100, 100, 3), dtype=np.uint8)
     
     @pytest.fixture
-    def sample_mask(self):
-        """Create a sample binary mask."""
-        mask = np.zeros((100, 100), dtype=np.uint8)
-        mask[25:75, 25:75] = 255
-        return mask
+    def sample_segmentation(self):
+        """Create a sample binary segmentation."""
+        segmentation = np.zeros((100, 100), dtype=np.uint8)
+        segmentation[25:75, 25:75] = 255
+        return segmentation
     
-    def test_overlay_mask(self, visualizer, sample_image, sample_mask):
-        """Test mask overlay creation."""
-        overlay = visualizer.overlay_mask(sample_image, sample_mask)
+    def test_overlay_segmentation(self, visualizer, sample_image, sample_segmentation):
+        """Test segmentation overlay creation."""
+        overlay = visualizer.overlay_segmentation(sample_image, sample_segmentation)
         
         assert overlay.shape == sample_image.shape
         assert overlay.dtype == np.uint8
     
-    def test_overlay_mask_alpha(self, visualizer, sample_image, sample_mask):
+    def test_overlay_segmentation_alpha(self, visualizer, sample_image, sample_segmentation):
         """Test overlay with different alpha values."""
-        overlay_low = visualizer.overlay_mask(sample_image, sample_mask, alpha=0.1)
-        overlay_high = visualizer.overlay_mask(sample_image, sample_mask, alpha=0.9)
+        overlay_low = visualizer.overlay_segmentation(sample_image, sample_segmentation, alpha=0.1)
+        overlay_high = visualizer.overlay_segmentation(sample_image, sample_segmentation, alpha=0.9)
         
         # With higher alpha, overlay should be more different from original
         diff_low = np.abs(overlay_low.astype(float) - sample_image.astype(float)).mean()
         diff_high = np.abs(overlay_high.astype(float) - sample_image.astype(float)).mean()
         
-        # Higher alpha should produce more difference where mask is
-        # (this is a rough test, exact behavior depends on mask coverage)
+        # Higher alpha should produce more difference where segmentation is
+        # (this is a rough test, exact behavior depends on segmentation coverage)
         assert overlay_low.shape == overlay_high.shape
     
-    def test_overlay_custom_color(self, visualizer, sample_image, sample_mask):
+    def test_overlay_custom_color(self, visualizer, sample_image, sample_segmentation):
         """Test overlay with custom color."""
         color = (0, 255, 0)  # Green
-        overlay = visualizer.overlay_mask(sample_image, sample_mask, color=color)
+        overlay = visualizer.overlay_segmentation(sample_image, sample_segmentation, color=color)
         
-        # In mask regions, green channel should be elevated
-        mask_region = sample_mask > 127
-        assert overlay[mask_region, 1].mean() > sample_image[mask_region, 1].mean()
+        # In segmentation regions, green channel should be elevated
+        seg_region = sample_segmentation > 127
+        assert overlay[seg_region, 1].mean() > sample_image[seg_region, 1].mean()
     
-    def test_create_comparison(self, visualizer, sample_image, sample_mask):
+    def test_create_comparison(self, visualizer, sample_image, sample_segmentation):
         """Test comparison image creation."""
-        comparison = visualizer.create_comparison(sample_image, sample_mask)
+        comparison = visualizer.create_comparison(sample_image, sample_segmentation)
         
         h, w = sample_image.shape[:2]
         # Comparison should have 3 panels
@@ -93,7 +93,7 @@ class TestVisualizer:
         visualizer.save_image(image, output_path)
         assert output_path.exists()
     
-    def test_create_annotated_overlay(self, visualizer, sample_image, sample_mask):
+    def test_create_annotated_overlay(self, visualizer, sample_image, sample_segmentation):
         """Test annotated overlay creation."""
         annotations = [
             {'text': 'Test annotation', 'position': (10, 10)},
@@ -101,7 +101,7 @@ class TestVisualizer:
         ]
         
         annotated = visualizer.create_annotated_overlay(
-            sample_image, sample_mask, annotations
+            sample_image, sample_segmentation, annotations
         )
         
         assert annotated.shape == sample_image.shape
@@ -122,7 +122,7 @@ class TestVisualizer:
         assert '0.85' in text or '85' in text
         assert 'segment 1' in text
     
-    def test_display_results(self, visualizer, sample_image, sample_mask, tmp_path):
+    def test_display_results(self, visualizer, sample_image, sample_segmentation, tmp_path):
         """Test display/save results."""
         result = {
             'continuous': True,
@@ -132,7 +132,7 @@ class TestVisualizer:
         
         save_path = tmp_path / "test_figure.png"
         fig = visualizer.display_results(
-            sample_image, sample_mask, result, save_path=save_path
+            sample_image, sample_segmentation, result, save_path=save_path
         )
         
         if visualizer.has_matplotlib:
@@ -152,32 +152,32 @@ class TestConvenienceFunctions:
         image_path = tmp_path / "image.png"
         Image.fromarray(image).save(image_path)
         
-        # Create and save mask
-        mask = np.zeros((100, 100), dtype=np.uint8)
-        mask[25:75, 25:75] = 255
-        mask_path = tmp_path / "mask.png"
-        Image.fromarray(mask).save(mask_path)
+        # Create and save segmentation
+        segmentation = np.zeros((100, 100), dtype=np.uint8)
+        segmentation[25:75, 25:75] = 255
+        seg_path = tmp_path / "segmentation.png"
+        Image.fromarray(segmentation).save(seg_path)
         
-        return {'image': image_path, 'mask': mask_path}
+        return {'image': image_path, 'segmentation': seg_path}
     
     def test_create_overlay_from_arrays(self):
         """Test create_overlay with arrays."""
         image = np.random.randint(0, 255, (100, 100, 3), dtype=np.uint8)
-        mask = np.zeros((100, 100), dtype=np.uint8)
-        mask[25:75, 25:75] = 255
+        segmentation = np.zeros((100, 100), dtype=np.uint8)
+        segmentation[25:75, 25:75] = 255
         
-        overlay = create_overlay(image, mask)
+        overlay = create_overlay(image, segmentation)
         assert overlay.shape == image.shape
     
     def test_create_overlay_from_paths(self, sample_data):
         """Test create_overlay with file paths."""
-        overlay = create_overlay(sample_data['image'], sample_data['mask'])
+        overlay = create_overlay(sample_data['image'], sample_data['segmentation'])
         assert overlay.shape[2] == 3  # RGB
     
     def test_save_comparison_function(self, sample_data, tmp_path):
         """Test save_comparison convenience function."""
         output_path = tmp_path / "comparison.png"
-        save_comparison(sample_data['image'], sample_data['mask'], output_path)
+        save_comparison(sample_data['image'], sample_data['segmentation'], output_path)
         
         assert output_path.exists()
 
@@ -192,13 +192,12 @@ class TestVisualizerWithoutMatplotlib:
         # Even if matplotlib is available, test the fallback path
         if not viz.has_matplotlib:
             image = np.random.randint(0, 255, (100, 100, 3), dtype=np.uint8)
-            mask = np.zeros((100, 100), dtype=np.uint8)
+            segmentation = np.zeros((100, 100), dtype=np.uint8)
             result = {'continuous': True}
             
-            fig = viz.create_report_figure(image, mask, result)
+            fig = viz.create_report_figure(image, segmentation, result)
             assert fig is None
 
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
-

@@ -65,14 +65,6 @@ class ResponseParser:
     def extract_boolean(cls, text: str, positive_keywords: List[str], negative_keywords: List[str]) -> Optional[bool]:
         """
         Extract a boolean value based on keyword presence.
-        
-        Args:
-            text: Text to analyze
-            positive_keywords: Keywords indicating True
-            negative_keywords: Keywords indicating False
-            
-        Returns:
-            Boolean value or None if unclear
         """
         text_lower = text.lower()
         
@@ -88,7 +80,6 @@ class ResponseParser:
     @classmethod
     def extract_continuity(cls, text: str) -> bool:
         """Extract continuity status from VLM response."""
-        # First try to find explicit statements
         patterns = [
             r"CONTINUITY:\s*(continuous|discontinuous)",
             r"continuity[:\s]+(is\s+)?(continuous|discontinuous|intact|broken)",
@@ -101,9 +92,8 @@ class ResponseParser:
                 value = match.group(match.lastindex).lower()
                 return value in ["continuous", "intact", "connected"]
         
-        # Fall back to keyword analysis
         result = cls.extract_boolean(text, cls.CONTINUOUS_KEYWORDS, cls.DISCONTINUOUS_KEYWORDS)
-        return result if result is not None else True  # Default to True if unclear
+        return result if result is not None else True
     
     @classmethod
     def extract_broken_segments(cls, text: str) -> List[str]:
@@ -125,7 +115,6 @@ class ResponseParser:
             matches = re.findall(pattern, text, re.IGNORECASE)
             for match in matches:
                 if isinstance(match, str) and len(match.strip()) > 0:
-                    # Clean up and split if multiple items
                     cleaned = match.strip()
                     if "\n" in cleaned:
                         items = [item.strip() for item in cleaned.split("\n") if item.strip()]
@@ -137,7 +126,6 @@ class ResponseParser:
         seen = set()
         unique_segments = []
         for seg in segments:
-            # Remove numbering
             seg = re.sub(r"^\d+\.\s*", "", seg).strip()
             if seg and seg.lower() not in seen:
                 seen.add(seg.lower())
@@ -148,13 +136,12 @@ class ResponseParser:
     @classmethod
     def extract_confidence(cls, text: str) -> float:
         """Extract confidence score from VLM response."""
-        # Try to find explicit confidence value
         patterns = [
             r"CONFIDENCE:\s*([0-9.]+)",
             r"confidence[:\s]+([0-9.]+)",
             r"([0-9.]+)\s*(?:confidence|certain)",
-            r"(\d+)%\s*confiden",  # Match "90% confident"
-            r"am\s+(\d+)%",  # Match "I am 90%"
+            r"(\d+)%\s*confiden",
+            r"am\s+(\d+)%",
         ]
         
         for pattern in patterns:
@@ -162,14 +149,12 @@ class ResponseParser:
             if match:
                 try:
                     value = float(match.group(1))
-                    # Normalize to 0-1 range
                     if value > 1:
                         value = value / 100
                     return min(1.0, max(0.0, value))
                 except ValueError:
                     continue
         
-        # Estimate confidence from language
         text_lower = text.lower()
         high_count = sum(1 for kw in cls.HIGH_CONFIDENCE_KEYWORDS if kw in text_lower)
         low_count = sum(1 for kw in cls.LOW_CONFIDENCE_KEYWORDS if kw in text_lower)
@@ -195,7 +180,6 @@ class ResponseParser:
             if match:
                 try:
                     value = float(match.group(1))
-                    # Normalize to 0-1 range
                     if value > 1:
                         value = value / 10
                     return min(1.0, max(0.0, value))
@@ -283,7 +267,7 @@ class ConnectivityChecker:
     def check_connectivity(
         self,
         image_path: Union[str, Path],
-        mask_path: Union[str, Path],
+        segmentation_path: Union[str, Path],
         prompt: Optional[str] = None
     ) -> ConnectivityResult:
         """
@@ -291,7 +275,7 @@ class ConnectivityChecker:
         
         Args:
             image_path: Path to the original image
-            mask_path: Path to the segmentation mask
+            segmentation_path: Path to the vessel segmentation
             prompt: Custom prompt (uses default if not provided)
             
         Returns:
@@ -310,7 +294,7 @@ class ConnectivityChecker:
         response = self.vlm.ask(
             image_path, 
             prompt, 
-            mask_path,
+            segmentation_path,
             system_prompt=system_prompt
         )
         
@@ -320,14 +304,14 @@ class ConnectivityChecker:
     def run_full_analysis(
         self,
         image_path: Union[str, Path],
-        mask_path: Union[str, Path]
+        segmentation_path: Union[str, Path]
     ) -> Dict[str, ConnectivityResult]:
         """
         Run multiple analysis prompts and combine results.
         
         Args:
             image_path: Path to the original image
-            mask_path: Path to the segmentation mask
+            segmentation_path: Path to the vessel segmentation
             
         Returns:
             Dictionary of analysis type -> ConnectivityResult
@@ -350,7 +334,7 @@ class ConnectivityChecker:
             response = self.vlm.ask(
                 image_path,
                 prompt_template.template,
-                mask_path,
+                segmentation_path,
                 system_prompt=system_prompt
             )
             results[analysis_type] = self.analyze(response, analysis_type=analysis_type)
@@ -387,12 +371,10 @@ class ConnectivityChecker:
             "generated_at": datetime.now().isoformat(),
         }
         
-        # Calculate average quality if available
         quality_scores = [r.quality_score for r in results.values() if r.quality_score is not None]
         if quality_scores:
             report["summary"]["average_quality_score"] = sum(quality_scores) / len(quality_scores)
         
-        # Combine all broken segments
         all_segments = []
         for r in results.values():
             all_segments.extend(r.broken_segments)
@@ -441,4 +423,3 @@ def check_keywords(response: str) -> Dict[str, bool]:
         "mentions_bifurcation": any(kw in response_lower for kw in ["bifurcation", "branch", "fork", "junction"]),
         "mentions_location": any(kw in response_lower for kw in ["upper", "lower", "left", "right", "center", "peripheral"]),
     }
-

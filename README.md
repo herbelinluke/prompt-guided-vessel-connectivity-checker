@@ -21,6 +21,12 @@ python prepare_for_chatgpt.py --demo
 python parse_response.py
 ```
 
+## Using Your Own Images
+
+```bash
+python prepare_for_chatgpt.py --image retina.png --segmentation vessels.png
+```
+
 ## Project Structure
 
 ```

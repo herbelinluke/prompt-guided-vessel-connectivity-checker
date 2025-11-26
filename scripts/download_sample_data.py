@@ -63,7 +63,7 @@ To use DRIVE data with this tool:
 
 4. Run the checker:
    python run_checker.py --image data/DRIVE/training/images/21_training.tif \\
-                         --mask data/DRIVE/training/1st_manual/21_manual1.gif
+                         --segmentation data/DRIVE/training/1st_manual/21_manual1.gif
 """.format(drive_dir=drive_dir))
 
 
@@ -108,43 +108,43 @@ def create_additional_samples():
     pil_img.save(dense_image_path)
     print(f"  ✓ {dense_image_path}")
     
-    # Create corresponding mask
-    mask = np.zeros((size, size), dtype=np.uint8)
-    pil_mask = Image.fromarray(mask)
-    draw_mask = ImageDraw.Draw(pil_mask)
+    # Create corresponding segmentation
+    segmentation = np.zeros((size, size), dtype=np.uint8)
+    pil_seg = Image.fromarray(segmentation)
+    draw_seg = ImageDraw.Draw(pil_seg)
     
     for y in [150, 256, 362]:
-        draw_mask.line([(30, y), (482, y)], fill=255, width=6)
+        draw_seg.line([(30, y), (482, y)], fill=255, width=6)
     for x in [100, 200, 300, 400]:
-        draw_mask.line([(x, 150), (x, 362)], fill=255, width=4)
-    draw_mask.line([(150, 150), (100, 80)], fill=255, width=3)
-    draw_mask.line([(350, 150), (400, 80)], fill=255, width=3)
-    draw_mask.line([(150, 362), (100, 432)], fill=255, width=3)
-    draw_mask.line([(350, 362), (400, 432)], fill=255, width=3)
+        draw_seg.line([(x, 150), (x, 362)], fill=255, width=4)
+    draw_seg.line([(150, 150), (100, 80)], fill=255, width=3)
+    draw_seg.line([(350, 150), (400, 80)], fill=255, width=3)
+    draw_seg.line([(150, 362), (100, 432)], fill=255, width=3)
+    draw_seg.line([(350, 362), (400, 432)], fill=255, width=3)
     
-    dense_mask_path = samples_dir / "dense_network_mask.png"
-    pil_mask.save(dense_mask_path)
-    print(f"  ✓ {dense_mask_path}")
+    dense_seg_path = samples_dir / "dense_network_segmentation.png"
+    pil_seg.save(dense_seg_path)
+    print(f"  ✓ {dense_seg_path}")
     
     # Test case: Sparse vessels with clear breaks
     print("\n📸 Creating fragmented vessel sample...")
     
-    frag_mask = np.array(pil_mask)
+    frag_seg = np.array(pil_seg)
     # Add multiple breaks
-    frag_mask[145:165, 140:180] = 0  # Break in top vessel
-    frag_mask[251:265, 240:280] = 0  # Break in middle vessel
-    frag_mask[357:372, 340:380] = 0  # Break in bottom vessel
-    frag_mask[180:220, 195:210] = 0  # Break in vertical
-    frag_mask[280:320, 295:310] = 0  # Break in vertical
+    frag_seg[145:165, 140:180] = 0  # Break in top vessel
+    frag_seg[251:265, 240:280] = 0  # Break in middle vessel
+    frag_seg[357:372, 340:380] = 0  # Break in bottom vessel
+    frag_seg[180:220, 195:210] = 0  # Break in vertical
+    frag_seg[280:320, 295:310] = 0  # Break in vertical
     
-    frag_mask_path = samples_dir / "fragmented_network_mask.png"
-    Image.fromarray(frag_mask).save(frag_mask_path)
-    print(f"  ✓ {frag_mask_path}")
+    frag_seg_path = samples_dir / "fragmented_network_segmentation.png"
+    Image.fromarray(frag_seg).save(frag_seg_path)
+    print(f"  ✓ {frag_seg_path}")
     
     # Test case: Noisy segmentation
     print("\n📸 Creating noisy segmentation sample...")
     
-    noisy_mask = np.array(pil_mask)
+    noisy_seg = np.array(pil_seg)
     # Add random noise blobs
     rng = np.random.RandomState(42)
     for _ in range(20):
@@ -152,19 +152,19 @@ def create_additional_samples():
         r = rng.randint(5, 15)
         y, x = np.ogrid[:size, :size]
         blob = (x - cx)**2 + (y - cy)**2 <= r**2
-        noisy_mask[blob] = 255
+        noisy_seg[blob] = 255
     
-    noisy_mask_path = samples_dir / "noisy_network_mask.png"
-    Image.fromarray(noisy_mask).save(noisy_mask_path)
-    print(f"  ✓ {noisy_mask_path}")
+    noisy_seg_path = samples_dir / "noisy_network_segmentation.png"
+    Image.fromarray(noisy_seg).save(noisy_seg_path)
+    print(f"  ✓ {noisy_seg_path}")
     
     print("\n✓ Additional test cases created!")
     
     return {
         'dense_image': dense_image_path,
-        'dense_mask': dense_mask_path,
-        'fragmented_mask': frag_mask_path,
-        'noisy_mask': noisy_mask_path,
+        'dense_segmentation': dense_seg_path,
+        'fragmented_segmentation': frag_seg_path,
+        'noisy_segmentation': noisy_seg_path,
     }
 
 
@@ -198,7 +198,7 @@ You can now run the checker with:
   # Analyze specific samples
   python run_checker.py \\
       --image data/samples/synthetic_vessel_image.png \\
-      --mask data/samples/synthetic_vessel_mask_broken.png
+      --segmentation data/samples/synthetic_vessel_segmentation_broken.png
 
   # With VLM analysis (requires OPENAI_API_KEY)
   export OPENAI_API_KEY='your-key'
@@ -208,4 +208,3 @@ You can now run the checker with:
 
 if __name__ == "__main__":
     main()
-

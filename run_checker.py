@@ -11,7 +11,7 @@ For FREE analysis using ChatGPT web interface, use instead:
 Usage:
     python run_checker.py --demo --skip-vlm    # Visualization only (free)
     python run_checker.py --demo               # Full analysis (needs API key)
-    python run_checker.py --image img.png --mask mask.png
+    python run_checker.py --image img.png --segmentation seg.png
 """
 
 import argparse
@@ -47,7 +47,8 @@ def main():
     )
     
     parser.add_argument('--image', '-i', type=str, help='Path to input image')
-    parser.add_argument('--mask', '-m', type=str, help='Path to segmentation mask')
+    parser.add_argument('--segmentation', '-s', type=str, help='Path to vessel segmentation')
+    parser.add_argument('--mask', '-m', type=str, help='(Deprecated) Alias for --segmentation')
     parser.add_argument('--output', '-o', type=str, default='output', help='Output directory')
     parser.add_argument('--demo', action='store_true', help='Use synthetic sample data')
     parser.add_argument('--skip-vlm', action='store_true', help='Skip VLM (visualization only)')
@@ -57,6 +58,9 @@ def main():
     parser.add_argument('--verbose', '-v', action='store_true')
     
     args = parser.parse_args()
+    
+    # Handle deprecated --mask argument
+    segmentation_arg = args.segmentation or args.mask
     
     print("""
 ╔═══════════════════════════════════════════════════════════════╗
@@ -69,31 +73,31 @@ def main():
         print("📁 Creating sample data...")
         samples = setup_sample_data()
         image_path = samples['image']
-        mask_path = samples['mask_broken']
-    elif args.image and args.mask:
+        segmentation_path = samples['segmentation_broken']
+    elif args.image and segmentation_arg:
         image_path = Path(args.image)
-        mask_path = Path(args.mask)
-        if not image_path.exists() or not mask_path.exists():
-            print("❌ Image or mask file not found")
+        segmentation_path = Path(segmentation_arg)
+        if not image_path.exists() or not segmentation_path.exists():
+            print("❌ Image or segmentation file not found")
             sys.exit(1)
     else:
-        print("❌ Use --demo or provide --image and --mask")
+        print("❌ Use --demo or provide --image and --segmentation")
         print("\n💡 For FREE analysis without API:")
         print("   python prepare_for_chatgpt.py --demo")
         sys.exit(1)
     
     print(f"📷 Image: {image_path}")
-    print(f"🎭 Mask: {mask_path}")
+    print(f"🔬 Segmentation: {segmentation_path}")
     
     # Load and visualize
     loader = SegmentationLoader()
-    image, mask = loader.load_pair(image_path, mask_path)
+    image, segmentation = loader.load_pair(image_path, segmentation_path)
     
     visualizer = Visualizer()
     output_dir = ensure_dir(args.output)
     
     # Save comparison image
-    comparison = visualizer.create_comparison(image, mask)
+    comparison = visualizer.create_comparison(image, segmentation)
     comparison_path = output_dir / "comparison.png"
     visualizer.save_image(comparison, comparison_path)
     print(f"💾 Saved: {comparison_path}")
@@ -112,7 +116,7 @@ def main():
             checker = ConnectivityChecker(vlm)
             
             prompt = ConnectivityPrompts.get_prompt(args.prompt)
-            result = checker.check_connectivity(image_path, mask_path, prompt.template)
+            result = checker.check_connectivity(image_path, segmentation_path, prompt.template)
             
             print_result(result.to_dict())
             
