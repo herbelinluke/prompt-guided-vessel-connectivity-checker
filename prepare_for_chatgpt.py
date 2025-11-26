@@ -160,7 +160,7 @@ Workflow:
     2. Select a prompt interactively (or press 'l' to see descriptions)
     3. Upload the image to ChatGPT web interface
     4. Copy the prompt shown and paste it
-    5. Copy ChatGPT's response to responses/response.txt
+    5. Copy ChatGPT's response to response.txt
     6. Run: python parse_response.py
         """
     )
@@ -259,7 +259,7 @@ Workflow:
 
 4. 💬 After ChatGPT responds, copy its response
 
-5. 💾 Paste the response into: responses/response.txt
+5. 💾 Paste the response into: response.txt
 
 6. 🔍 Run the parser:
    python parse_response.py --prompt {selected_prompt['name']}
@@ -276,16 +276,7 @@ Workflow:
     
     print(f"💡 Prompt saved to: {prompt_output}")
     print(f"💡 Prompt type saved for parser: {prompt_meta}")
-    
-    # Create the responses directory and template file if needed
-    responses_dir = ensure_dir(Path(__file__).parent / "responses")
-    response_template = responses_dir / "response.txt"
-    if not response_template.exists():
-        response_template.write_text("""# Paste ChatGPT's response here
-# Delete these comment lines first
 
-""")
-        print(f"📄 Response template created: {response_template}")
 
 
 if __name__ == "__main__":

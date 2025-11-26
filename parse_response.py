@@ -419,7 +419,7 @@ def main():
     )
     
     parser.add_argument('--file', '-f', type=str, 
-                        default='responses/response.txt',
+                        default='./response.txt',
                         help='Path to response file')
     parser.add_argument('--text', '-t', type=str,
                         help='Parse response text directly')
