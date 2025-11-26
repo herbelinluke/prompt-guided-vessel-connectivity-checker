@@ -2,7 +2,7 @@
 """
 Parse ChatGPT Response.
 
-Reads a response from responses/response.txt (or specified file)
+Reads a response from response.txt (in root directory)
 and extracts structured connectivity data.
 
 Usage:
@@ -15,6 +15,7 @@ import argparse
 import sys
 import re
 import json
+import shutil
 from pathlib import Path
 from datetime import datetime
 
@@ -420,7 +421,7 @@ def main():
     
     parser.add_argument('--file', '-f', type=str, 
                         default='./response.txt',
-                        help='Path to response file')
+                        help='Path to response file (default: ./response.txt)')
     parser.add_argument('--text', '-t', type=str,
                         help='Parse response text directly')
     parser.add_argument('--prompt', '-p', type=str,
@@ -475,6 +476,9 @@ def main():
     print(f"📄 Reading response from: {source}")
     print(f"   Length: {len(response_text)} characters")
     
+    # Generate a shared report ID for both files
+    report_id = generate_report_id()
+    
     # Parse with the smarter parser
     print("\n🔍 Parsing response...")
     parser_instance = SmartResponseParser(prompt_type=prompt_type)
@@ -492,18 +496,22 @@ def main():
             print(f"... ({len(response_text) - 800} more characters)")
         print("-" * 60)
     
-    # Save output
-    output_path = args.output
-    if not output_path:
-        output_dir = ensure_dir(Path(__file__).parent / "output")
-        output_path = output_dir / f"result_{generate_report_id()}.json"
+    # Save a copy of the response to responses/ directory
+    responses_dir = ensure_dir(Path(__file__).parent / "responses")
+    response_archive_path = responses_dir / f"response_{report_id}.txt"
+    response_archive_path.write_text(response_text)
+    print(f"\n📝 Response archived to: {response_archive_path}")
     
-    # Remove raw_response from saved JSON (too large)
+    # Save JSON output
+    output_dir = ensure_dir(Path(__file__).parent / "output")
+    output_path = args.output if args.output else output_dir / f"result_{report_id}.json"
+    
+    # Remove raw_response from saved JSON (too large, and we have the archived copy)
     save_result = {k: v for k, v in result.items() if k != 'raw_response'}
-    save_result['source_file'] = source
+    save_result['response_file'] = f"responses/{response_archive_path.name}"
     
     save_json(save_result, output_path)
-    print(f"\n💾 Result saved to: {output_path}")
+    print(f"💾 Result saved to: {output_path}")
     
     # Summary
     print("\n" + "=" * 60)

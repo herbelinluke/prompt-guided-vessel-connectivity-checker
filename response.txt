@@ -1,5 +1,3 @@
-CONTINUITY: discontinuous
-BREAKS_FOUND: yes
-QUALITY_SCORE: 7/10
-DESCRIPTION:
-The major vessels are well-captured and remain continuous along their full lengths, showing good segmentation of the primary and secondary branches. However, several of the thinner peripheral vessels exhibit small gaps—particularly at fine bifurcations and terminal branches. These breaks appear as missing short segments where the binary mask does not maintain full connectivity. While the global vessel tree is largely preserved, the finer microvasculature shows noticeable discontinuities. Overall connectivity is good but not perfect, with small but observable breaks reducing the completeness of the vessel network.
+CONTINUITY: continuous
+QUALITY_SCORE: 8.5
+CONFIDENCE: 0.92

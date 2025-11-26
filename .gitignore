@@ -30,11 +30,18 @@ env/
 htmlcov/
 
 # Output files (generated)
+output/*.png
+output/*.json
+output/*.txt
+
+# Response files (generated)
+responses/*.txt
+response.txt
 
 # Data (generated samples)
 data/samples/*.png
 
-# Keep directories
+# Keep directories with .gitkeep
 !output/.gitkeep
 !responses/.gitkeep
 !data/.gitkeep
