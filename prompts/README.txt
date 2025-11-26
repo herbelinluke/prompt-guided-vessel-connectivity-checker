@@ -4,33 +4,57 @@
 
 HOW TO USE THESE PROMPTS:
 
-1. Run the preparation script to create your composite image:
+1. Run the preparation script:
+   
+   python prepare_for_chatgpt.py --demo
+   
+   Or with your own images:
    
    python prepare_for_chatgpt.py --image your_image.png --mask your_mask.png
 
-2. This will create a composite image in output/ and tell you which prompt to use.
+2. The script will:
+   - Create a composite image in output/chatgpt_upload.png
+   - Let you interactively select a prompt (press 'l' to see descriptions)
+   - Display the prompt text to copy
 
 3. Go to ChatGPT (https://chat.openai.com)
 
-4. Click the attachment icon and upload the composite image
+4. Click the attachment icon and upload output/chatgpt_upload.png
 
-5. Open one of these prompt files:
-   - 01_general_continuity.txt     (start here for basic analysis)
-   - 02_broken_vessel_detection.txt (find specific broken segments)
-   - 03_continuity_score.txt       (get a numerical score)
-   - 04_bifurcation_analysis.txt   (check branching points)
-   - 05_anatomical_sanity.txt      (verify anatomical plausibility)
-   - 06_segmentation_quality.txt   (comprehensive quality check)
+5. Paste the prompt and send
 
-6. Copy the text below the dashed line and paste into ChatGPT
+6. Copy ChatGPT's response and save it to responses/response.txt
 
-7. Copy ChatGPT's response and save it to responses/response.txt
-
-8. Run the parser:
+7. Run the parser:
    
    python parse_response.py
 
-This will extract structured data from ChatGPT's response!
-
+================================================================================
+                              AVAILABLE PROMPTS
 ================================================================================
 
+[1] 01_general_continuity.txt
+    Quick yes/no check for vessel continuity with overall quality score
+    START HERE for basic analysis
+
+[2] 02_broken_vessel_detection.txt
+    Find and list specific locations of all breaks with severity ratings
+    Use when you need to know WHERE the problems are
+
+[3] 03_continuity_score.txt
+    Get a single 0-1 numerical score for comparing multiple segmentations
+    Good for benchmarking different algorithms
+
+[4] 04_bifurcation_analysis.txt
+    Evaluate quality of vessel branching points (Y-shaped splits)
+    Specialized check for branch point issues
+
+[5] 05_anatomical_sanity.txt
+    Check if segmentation looks biologically realistic (no artifacts)
+    Catches weird loops, floating blobs, unnatural patterns
+
+[6] 06_segmentation_quality.txt
+    Comprehensive evaluation with 5 separate dimension scores
+    Use for detailed final reports
+
+================================================================================

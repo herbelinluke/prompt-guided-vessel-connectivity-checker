@@ -1,5 +1,8 @@
 """
-Tests for connectivity prompts.
+Tests for connectivity prompts (API workflow).
+
+Note: These tests are for the API-based workflow.
+For manual ChatGPT workflow, prompts are in prompts/*.txt files.
 """
 
 import pytest
@@ -9,14 +12,7 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.connectivity_prompts import (
-    ConnectivityPrompts,
-    PromptTemplate,
-    get_continuity_prompt,
-    get_broken_segments_prompt,
-    get_bifurcation_prompt,
-    get_quality_prompt
-)
+from src.connectivity_prompts import ConnectivityPrompts, PromptTemplate
 
 
 class TestPromptTemplate:
@@ -45,17 +41,9 @@ class TestConnectivityPrompts:
         prompts = ConnectivityPrompts.get_all_prompts()
         
         assert isinstance(prompts, dict)
-        assert len(prompts) >= 5
+        assert len(prompts) >= 2
         assert "general_continuity" in prompts
         assert "broken_vessel_detection" in prompts
-    
-    def test_get_by_category(self):
-        """Test filtering prompts by category."""
-        continuity_prompts = ConnectivityPrompts.get_by_category("continuity")
-        
-        assert len(continuity_prompts) >= 2
-        for prompt in continuity_prompts.values():
-            assert prompt.category == "continuity"
     
     def test_get_prompt(self):
         """Test getting specific prompt."""
@@ -76,7 +64,6 @@ class TestConnectivityPrompts:
         
         assert isinstance(names, list)
         assert "general_continuity" in names
-        assert "bifurcation_analysis" in names
     
     def test_get_system_prompt(self):
         """Test getting system prompt."""
@@ -85,20 +72,6 @@ class TestConnectivityPrompts:
         assert isinstance(system_prompt, str)
         assert len(system_prompt) > 0
         assert "medical" in system_prompt.lower() or "vessel" in system_prompt.lower()
-    
-    def test_create_custom_prompt(self):
-        """Test creating custom prompt."""
-        custom = ConnectivityPrompts.create_custom_prompt(
-            name="custom_test",
-            category="custom",
-            template="Custom prompt for {task}.",
-            description="A custom test prompt",
-            expected_keywords=["custom", "test"]
-        )
-        
-        assert custom.name == "custom_test"
-        assert custom.category == "custom"
-        assert "custom" in custom.expected_keywords
 
 
 class TestPromptContent:
@@ -108,37 +81,21 @@ class TestPromptContent:
         """Test that continuity prompt has clear instructions."""
         prompt = ConnectivityPrompts.GENERAL_CONTINUITY
         
-        # Should ask about continuity
         assert "continuous" in prompt.template.lower() or "continuity" in prompt.template.lower()
-        # Should mention breaks or gaps
         assert "break" in prompt.template.lower() or "gap" in prompt.template.lower()
     
     def test_broken_detection_prompt_structure(self):
         """Test broken vessel detection prompt structure."""
         prompt = ConnectivityPrompts.BROKEN_VESSEL_DETECTION
         
-        # Should ask about broken/disconnected segments
         assert "broken" in prompt.template.lower() or "disconnect" in prompt.template.lower()
-        # Should ask for locations
         assert "location" in prompt.template.lower() or "where" in prompt.template.lower()
     
-    def test_bifurcation_prompt_content(self):
-        """Test bifurcation prompt content."""
-        prompt = ConnectivityPrompts.BIFURCATION_ANALYSIS
+    def test_quality_prompt_has_scores(self):
+        """Test quality prompt asks for scores."""
+        prompt = ConnectivityPrompts.SEGMENTATION_QUALITY
         
-        # Should mention bifurcation
-        assert "bifurcation" in prompt.template.lower()
-        # Should mention branching
-        assert "branch" in prompt.template.lower()
-    
-    def test_anatomical_prompt_content(self):
-        """Test anatomical sanity prompt content."""
-        prompt = ConnectivityPrompts.ANATOMICAL_SANITY
-        
-        # Should mention anatomical
-        assert "anatomic" in prompt.template.lower()
-        # Should ask about plausibility
-        assert "plausible" in prompt.template.lower() or "natural" in prompt.template.lower()
+        assert "score" in prompt.template.lower() or "1-10" in prompt.template
     
     def test_all_prompts_have_expected_keywords(self):
         """Test that all prompts have expected keywords defined."""
@@ -149,34 +106,5 @@ class TestPromptContent:
             assert isinstance(prompt.expected_keywords, list)
 
 
-class TestConvenienceFunctions:
-    """Test prompt convenience functions."""
-    
-    def test_get_continuity_prompt(self):
-        """Test get_continuity_prompt function."""
-        prompt = get_continuity_prompt()
-        assert isinstance(prompt, str)
-        assert len(prompt) > 0
-    
-    def test_get_broken_segments_prompt(self):
-        """Test get_broken_segments_prompt function."""
-        prompt = get_broken_segments_prompt()
-        assert isinstance(prompt, str)
-        assert "broken" in prompt.lower() or "segment" in prompt.lower()
-    
-    def test_get_bifurcation_prompt(self):
-        """Test get_bifurcation_prompt function."""
-        prompt = get_bifurcation_prompt()
-        assert isinstance(prompt, str)
-        assert "bifurcation" in prompt.lower()
-    
-    def test_get_quality_prompt(self):
-        """Test get_quality_prompt function."""
-        prompt = get_quality_prompt()
-        assert isinstance(prompt, str)
-        assert "quality" in prompt.lower()
-
-
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
-

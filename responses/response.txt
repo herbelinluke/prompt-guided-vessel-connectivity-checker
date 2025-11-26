@@ -1,5 +1,22 @@
-CONTINUITY: discontinuous
-BREAKS_FOUND: yes
-QUALITY_SCORE: 6
+Vessel Segmentation Quality Evaluation
+Scores (1–10)
 
-DESCRIPTION: The vessel segmentation shows several discontinuities. There is a noticeable gap in the upper-left branch where the vessel appears to be severed. Additionally, the main artery in the center has a break in its midsection. The lower-right quadrant also shows some fragmentation where minor vessels appear disconnected from the main tree. The bifurcations generally appear intact, but these breaks compromise the overall connectivity of the vessel structure.
+COMPLETENESS: 7/10
+Some vessels are fully captured, but a few small branches—especially near junctions—are partially missing.
+
+ACCURACY: 8/10
+Where vessels are detected, the alignment to the true vessel paths is good. Boundaries follow the vessel centerlines closely, with minimal deviation.
+
+CONNECTIVITY: 6/10
+There are clear breaks at several junctions (e.g., the central horizontal vessel appears disconnected between the left and right halves). Some branch points fail to fully connect.
+
+NOISE_LEVEL: 10/10
+No false positives are visible. The mask is clean and contains only vessel-like structures.
+
+GAP_SEVERITY: 6/10
+Gaps are present at key points—most notably at bifurcations and in the central trunk—indicating missed continuity.
+
+OVERALL_QUALITY: 7/10
+SUMMARY
+
+The segmentation captures the main vessel structures with good spatial accuracy and no noise, but suffers from connectivity issues and several small gaps, especially at bifurcations and along the central horizontal vessel. Improving continuity and recovering the missing small segments would raise the overall quality significantly.

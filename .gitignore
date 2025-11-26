@@ -1,28 +1,17 @@
 # Python
-.vlm/
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
 build/
-develop-eggs/
 dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
-*.egg
+.eggs/
 
 # Virtual environments
 venv/
+.vlm/
 ENV/
 env/
 
@@ -30,7 +19,6 @@ env/
 .idea/
 .vscode/
 *.swp
-*.swo
 *~
 
 # Jupyter
@@ -41,14 +29,18 @@ env/
 .coverage
 htmlcov/
 
-# Output
-output/
-*.json
-!package.json
+# Output files (generated)
+output/*.png
+output/*.json
+output/*.txt
+responses/response.txt
 
-# Data (keep structure, ignore large files)
-data/DRIVE/
+# Data (generated samples)
 data/samples/*.png
+
+# Keep directories
+!output/.gitkeep
+!responses/.gitkeep
 !data/.gitkeep
 
 # OS
@@ -58,4 +50,3 @@ Thumbs.db
 # Secrets
 .env
 *.key
-
