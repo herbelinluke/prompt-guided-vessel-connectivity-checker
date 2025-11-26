@@ -1,0 +1,17 @@
+Analyze the vessel bifurcations (branching points) in this segmentation.
+
+You are shown:
+1. The original retinal/vessel image
+2. The binary segmentation mask (white = vessels, black = background)
+3. An overlay showing the segmentation on the original image
+
+A good bifurcation in a vessel segmentation should:
+- Show smooth transitions at branch points
+- Maintain vessel continuity through the branch
+- Have consistent vessel width relative to child branches
+
+Examine the segmentation and report:
+BIFURCATION_QUALITY: [good/fair/poor]
+ISSUES_FOUND: [list any problems at branch points]
+LOCATIONS: [where issues occur, if any]
+ANATOMICAL_PLAUSIBILITY: [yes/no - do bifurcations look natural?]

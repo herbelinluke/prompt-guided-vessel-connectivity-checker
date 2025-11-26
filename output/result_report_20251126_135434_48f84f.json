@@ -1,0 +1,16 @@
+{
+  "continuous": false,
+  "broken_segments": [
+    "discontinuous\nBREAKS_FOUND: yes\nQUALITY_SCORE: 7/10\nDESCRIPTION:\nThe major vessels are well-captured and remain continuous along their full lengths",
+    "However, several of the thinner peripheral vessels exhibit small gaps\u2014particularly at fine bifurcations"
+  ],
+  "confidence": 0.75,
+  "quality_score": 0.7,
+  "bifurcation_quality": null,
+  "anatomically_plausible": null,
+  "total_breaks": null,
+  "dimension_scores": null,
+  "prompt_type": "01_general_continuity",
+  "parsed_at": "2025-11-26T13:54:34.298709",
+  "source_file": "response.txt"
+}
