@@ -34,21 +34,25 @@ vessel-connectivity-checker/
 ├── prepare_for_chatgpt.py   # Create composite image + select prompt
 ├── parse_response.py        # Parse ChatGPT's response to JSON
 ├── response.txt             # ← Paste ChatGPT response here
+├── compare_metrics.py       # compare ChatGPT Topology analysis with Skeletonize calculations
 ├── prompts/                 # Copy-paste prompts for ChatGPT
 │   ├── 01_general_continuity.txt
 │   ├── 02_broken_vessel_detection.txt
 │   ├── 03_continuity_score.txt
 │   ├── 04_bifurcation_analysis.txt
 │   ├── 05_anatomical_sanity.txt
-│   └── 06_segmentation_quality.txt
-├── responses/               # Archived responses (auto-saved)
-│   └── response_<id>.txt
+│   ├── 06_segmentation_quality.txt
+    └── 07_topology_metrics.txt
+├── responses/               # Archived responses (saved when generating json reports)
+│   └── response_report_<...>.txt
 ├── output/                  # Generated images and reports
 │   ├── chatgpt_upload.png
 │   └── result_<id>.json
 ├── src/
 │   ├── segmentation_loader.py
 │   ├── connectivity_checker.py
+│   ├── connectivity_prompts.py
+│   ├── skeleton_metrics.py
 │   ├── visualization.py
 │   └── api_optional/        # [Optional] API automation
 │       └── vlm_interface.py
